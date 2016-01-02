@@ -72,7 +72,9 @@ NEETOREE_PARSER_SPEC_APPLY(group) {
     }
 
     if (applyctx->result == NEETOREE_RESULT_FAILURE && applyctx->grammar->valuestack->global->depth != level) {
+#ifdef DEBUG
         printf("drop\n");
+#endif
         neetoree_parser_valuestack_drop(applyctx->grammar->valuestack, level);
     }
 

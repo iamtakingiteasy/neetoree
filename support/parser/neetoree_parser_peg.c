@@ -3,9 +3,12 @@
 //
 
 #include <neetoree_parser.h>
-#include "neetoree_parser_actions.h"
 
-NeetoreeResult neetoree_parser_peg_impl(void *context, void *init, neetoree_stream_t *stream) {
+static NeetoreeResult neetoree_parser_peg_impl(void *context, void *init, neetoree_stream_t *stream);
+
+#include "neetoree_parser_actions.inc"
+
+static NeetoreeResult neetoree_parser_peg_impl(void *context, void *init, neetoree_stream_t *stream) {
     neetoree_parser_node_t grammar_rule_nodes[] = {
             NEETOREE_PARSER_NODE(REF, ONE,       NONE, "Spacing",    NULL),
             NEETOREE_PARSER_NODE(REF, ONEORMORE, NONE, "Definition", NULL),
@@ -500,18 +503,4 @@ NeetoreeResult neetoree_parser_peg_impl(void *context, void *init, neetoree_stre
     neetoree_parser_free(compiled);
     return code;
     */
-}
-
-
-neetoree_string_t *neetoree_parser_peg(char *name, char *include, neetoree_stream_t *stream) {
-    neetoree_parser_builder_context_t *ctx = neetoree_parser_builder_new();
-    NeetoreeResult result = neetoree_parser_peg_impl(ctx, ctx->rules, stream);
-    if (result != NEETOREE_RESULT_SUCCESS) {
-        neetoree_parser_builder_free(ctx);
-        return NULL;
-    }
-
-    neetoree_string_t *code = neetoree_parser_builder_render(name, include, ctx);
-    neetoree_parser_builder_free(ctx);
-    return code;
 }

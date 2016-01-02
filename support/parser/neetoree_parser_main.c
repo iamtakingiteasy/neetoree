@@ -8,11 +8,12 @@
 #include <neetoree_string.h>
 
 int main(int argc, char **argv) {
-    char *data = "AbcZZZZ <- (<Efg> .)* { foo(); } !.\nEfg <- 'lol' / 'baka'\n";
-    //neetoree_stream_t *stream = neetoree_stream_string_new(data, strlen(data), 8);
-    FILE *f = fopen("/home/user/soft/mine/neetoree/directint/input.data", "r");
+    if (argc == 1) {
+        return 0;
+    }
+    FILE *f = fopen(argv[1], "r");
     neetoree_stream_t *stream = neetoree_stream_file_new(f, 8);
-    neetoree_string_t *parser = neetoree_parser_peg("neetoree_parser_peg_impl", "#include \"neetoree_parser_actions.h\"", stream);
+    neetoree_string_t *parser = neetoree_parser_peg("neetoree_parser_peg_impl", "#include \"neetoree_parser_actions.inc\"", stream);
     fclose(f);
 
     if (parser == NULL) {

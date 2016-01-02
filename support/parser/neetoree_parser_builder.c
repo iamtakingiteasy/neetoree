@@ -210,13 +210,16 @@ neetoree_string_t *neetoree_parser_builder_render(char *name, char *include, nee
     render.out = neetoree_string_new();
 
     neetoree_string_append_c_str(render.out, "#include <neetoree_parser.h>\n");
+    neetoree_string_append_c_str(render.out, "\nstatic NeetoreeResult ");
+    neetoree_string_append_c_str(render.out, name);
+    neetoree_string_append_c_str(render.out, "(void *context, void *init, neetoree_stream_t *stream);\n\n");
     if (include) {
         neetoree_string_append_c_str(render.out, include);
         neetoree_string_append_c_str(render.out, "\n");
     }
     //neetoree_string_append_c_str(render.out, "\n");
     //neetoree_ptrlist_walk(ctx->actions, NEETOREE_PTRLIST_WALKER_NAME(builder_actions), &render);
-    neetoree_string_append_c_str(render.out, "\nNeetoreeResult ");
+    neetoree_string_append_c_str(render.out, "\nstatic NeetoreeResult ");
     neetoree_string_append_c_str(render.out, name);
     neetoree_string_append_c_str(render.out, "(void *context, void *init, neetoree_stream_t *stream) {\n");
     neetoree_ptrlist_walk(ctx->groups, NEETOREE_PTRLIST_WALKER_NAME(builder_groups), &render);
