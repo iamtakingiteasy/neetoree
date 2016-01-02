@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<node>
+  <interface name="com.Skype.API">
+    <method name="Invoke">
+      <arg type="s" name="request" direction="in"/>
+      <arg type="s" name="result" direction="out"/>
+    </method>
+  </interface>
+  <interface name="com.Skype.API.Client">
+    <method name="Notify">
+      <arg type="s" name="message" direction="in"/>
+    </method>
+  </interface>
+</node>
+
