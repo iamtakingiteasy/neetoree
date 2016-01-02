@@ -137,7 +137,6 @@ static NeetoreeResult neetoree_parser_peg_impl(void *context, void *init, neetor
             NEETOREE_PARSER_NODE(REF, ONE, NONE, "Open",       NULL),
             NEETOREE_PARSER_NODE_ACTION(group),
             NEETOREE_PARSER_NODE(REF, ONE, NONE, "Expression", NULL),
-//            NEETOREE_PARSER_NODE_ACTION(terminate_choice),
             NEETOREE_PARSER_NODE(REF, ONE, NONE, "Close",      NULL),
             NEETOREE_PARSER_NODE_TERM
     };

@@ -78,7 +78,7 @@ static NEETOREE_PARSER_ACTION_HANDLER(group) {
     node->chain = NEETOREE_PARSER_NODE_TYPE_SEQUENCE;
     neetoree_parser_builder_node_t *parent = neetoree_parser_valuestack_peek(valuestack, 1);
     if (node->spec == NULL) {
-        node->spec = neetoree_parser_builder_name(valuestack);
+        //node->spec = neetoree_parser_builder_name(parent);
     }
 }
 
@@ -157,7 +157,7 @@ static NEETOREE_PARSER_ACTION_HANDLER(terminate_choice) {
         neetoree_parser_builder_context_t *ctx = context;
         parent->children->length -= node->children->length;
         neetoree_parser_valuestack_push(valuestack, node, NEETOREE_FREE_NAME(builder_node));
-        node->spec = neetoree_parser_builder_name(valuestack);
+        //node->spec = neetoree_parser_builder_name(neetoree_parser_valuestack_peek(valuestack, 1));
         //neetoree_ptrlist_add(parent->children, node);
         //neetoree_ptrlist_add(ctx->groups, node);
     }
@@ -172,7 +172,7 @@ static NEETOREE_PARSER_ACTION_HANDLER(set_choice) {
     parent->chain = NEETOREE_PARSER_NODE_TYPE_CHOICE;
 
     if (node->spec == NULL) {
-        node->spec = neetoree_parser_builder_name(valuestack);
+        //node->spec = neetoree_parser_builder_name(parent);
     }
 }
 
@@ -193,31 +193,12 @@ static NEETOREE_PARSER_ACTION_HANDLER(node_commit) {
     neetoree_parser_builder_context_t *ctx = context;
 
     if (node->chain != NEETOREE_PARSER_NODE_TYPE_NONE) {
-        if (node->children->length == 0) {
-            NEETOREE_FREE_NAME(builder_node)(node);
-        } else if (node->children->length == 1) {
-            neetoree_parser_builder_node_t *child = neetoree_ptrlist_remove(node->children, 0);
-            neetoree_parser_builder_spec_maxlen(child, parent);
-            neetoree_ptrlist_add(parent->children, child);
-            NEETOREE_FREE_NAME(builder_node)(node);
-        } else {
-            node->reference = node->spec;
-            node->spec = NULL;
-            neetoree_ptrlist_add(ctx->groups, node);
-            neetoree_ptrlist_add(parent->children, node);
-        }
+        node->reference = node->spec;
+        node->spec = NULL;
+        neetoree_ptrlist_add(ctx->groups, node);
+        neetoree_ptrlist_add(parent->children, node);
     } else {
         neetoree_ptrlist_add(parent->children, node);
-        if (node->type == NEETOREE_PARSER_NODE_TYPE_ACTION) {
-            node->reference = neetoree_string_new();
-            int siz = snprintf(NULL, 0, "%s_action_%ld", parent->spec->data, ctx->actions->length + 1);
-            if (siz > 0) {
-                size_t size = (size_t) siz;
-                neetoree_string_reserve(node->reference, size+1);
-                node->reference->len = (size_t) (snprintf(node->reference->data, size + 1, "%s_action_%ld", parent->spec->data, ctx->actions->length + 1));
-                neetoree_ptrlist_add(ctx->actions, node);
-            }
-        }
     }
 }
 

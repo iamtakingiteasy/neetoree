@@ -197,7 +197,6 @@ NeetoreeResult neetoree_parser_applywrap(neetoree_parser_compiled_node_t *node, 
             "REF",
             "PRED",
             "ACTION",
-            "ACTIONREF",
             "BEGIN",
             "END"
     };

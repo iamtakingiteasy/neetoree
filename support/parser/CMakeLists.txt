@@ -1,6 +1,6 @@
 set(NEETOREE_PARSER_SOURCES
         neetoree_parser_main.c
-        neetoree_parser_peg.c
+        neetoree_parser_grammar.c
         neetoree_parser_valuestack.c
         neetoree_parser_compile.c
         neetoree_parser_node_ref.c
@@ -23,5 +23,5 @@ if (${DEBUG})
 endif(${DEBUG})
 
 
-add_definitions(-DDEBUG_TOKEN)
+#add_definitions(-DDEBUG_TOKEN -DDEBUG_LEX)
 #add_definitions(-DDEBUG)

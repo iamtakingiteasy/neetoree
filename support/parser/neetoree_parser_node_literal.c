@@ -59,6 +59,10 @@ NEETOREE_PARSER_SPEC_NEW(literal) {
                 break;
         }
     }
+
+    if (state == NEETOREE_PARSER_RANGE_STATE_ESCAPE) {
+        neetoree_string_append_char(str, '\\');
+    }
     return str;
 }
 
