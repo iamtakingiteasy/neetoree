@@ -14,6 +14,16 @@ neetoree_ptrlist_t *neetoree_ptrlist_new(neetoree_freefunc freefunc) {
     return list;
 }
 
+void neetoree_ptrlist_insert(neetoree_ptrlist_t *list, size_t idx, void *item) {
+    void *ptr = item;
+    for (size_t i = idx; i < list->length; i++) {
+        void *tmp = neetoree_ptrlist_access(list, i);
+        neetoree_ptrlist_set(list, i, ptr);
+        ptr = tmp;
+    }
+    neetoree_ptrlist_add(list, ptr);
+}
+
 void neetoree_ptrlist_add(neetoree_ptrlist_t *list, void *item) {
     list->length += 1;
     if (list->length > list->allocd) {
@@ -23,11 +33,23 @@ void neetoree_ptrlist_add(neetoree_ptrlist_t *list, void *item) {
     list->ptrs[list->length-1] = item;
 }
 
-void neetoree_ptrlist_remove(neetoree_ptrlist_t *list, size_t i) {
-    if (i < list->length - 1) {
-        list->ptrs[i] = list->ptrs[list->length - 1];
+void * neetoree_ptrlist_remove_fast(neetoree_ptrlist_t *list, size_t idx) {
+    void *res = neetoree_ptrlist_access(list ,idx);
+    if (idx < list->length - 1) {
+        list->ptrs[idx] = list->ptrs[list->length - 1];
     }
     list->length -= 1;
+    return res;
+}
+
+void *neetoree_ptrlist_remove(neetoree_ptrlist_t *list, size_t idx) {
+    void *res = neetoree_ptrlist_access(list ,idx);
+    for (size_t i = idx; i < list->length - 1; i++) {
+        void *next = neetoree_ptrlist_access(list, i+1);
+        neetoree_ptrlist_set(list, i, next);
+    }
+    list->length -= 1;
+    return res;
 }
 
 NEETOREE_PTRLIST_WALKER(free) {

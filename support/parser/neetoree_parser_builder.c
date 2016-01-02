@@ -44,7 +44,7 @@ static char *neetoree_parser_builder_node_predicate_names[] = {
         "NEGATIVE,"
 };
 
-size_t neetoree_parser_builder_count(neetoree_parser_builder_node_t *parent) {
+static size_t neetoree_parser_builder_count_iter(neetoree_parser_builder_node_t *parent) {
     size_t ord = 0;
     for (size_t i = 0; i < parent->children->length; i++) {
         neetoree_parser_builder_node_t *n = neetoree_ptrlist_access(parent->children, i);
@@ -55,15 +55,16 @@ size_t neetoree_parser_builder_count(neetoree_parser_builder_node_t *parent) {
     return ord;
 }
 
-neetoree_string_t * neetoree_parser_builder_name(char *parentname, size_t ord) {
-    neetoree_string_t *name = neetoree_string_dup_new(parentname);
-    if (ord > 0) {
-        int res = snprintf(NULL, 0, "_%ld", ord);
-        if (res > 0) {
-            size_t siz = (size_t) res;
-            neetoree_string_reserve(name, name->len + siz + 1);
-            name->len += snprintf(name->data + name->len, siz+1, "_%ld", ord);
-        }
+neetoree_string_t * neetoree_parser_builder_name(neetoree_parser_valuestack_t *valuestack) {
+    neetoree_parser_builder_node_t *parent = neetoree_parser_valuestack_peek(valuestack, 1);
+    size_t ord = neetoree_parser_builder_count_iter(parent) + 1;
+    //size_t ord = parent->children->length + 1;
+    neetoree_string_t *name = neetoree_string_dup_new(parent->spec->data);
+    int res = snprintf(NULL, 0, "_%ld", ord);
+    if (res > 0) {
+        size_t siz = (size_t) res;
+        neetoree_string_reserve(name, name->len + siz + 1);
+        name->len += snprintf(name->data + name->len, siz+1, "_%ld", ord);
     }
     return name;
 }
@@ -100,11 +101,11 @@ static NEETOREE_PTRLIST_WALKER(builder_nodes) {
         || node->type == NEETOREE_PARSER_NODE_TYPE_END
         || node->type == NEETOREE_PARSER_NODE_TYPE_ACTION) {
         if (node->type == NEETOREE_PARSER_NODE_TYPE_BEGIN) {
-            neetoree_string_append_c_str(out, "            NEETOREE_PARSER_BEGIN,\n");
+            neetoree_string_append_c_str(out, "            NEETOREE_PARSER_NODE_BEGIN,\n");
         } else if (node->type == NEETOREE_PARSER_NODE_TYPE_END) {
-            neetoree_string_append_c_str(out, "            NEETOREE_PARSER_END,\n");
+            neetoree_string_append_c_str(out, "            NEETOREE_PARSER_NODE_END,\n");
         } else if (node->type == NEETOREE_PARSER_NODE_TYPE_ACTION) {
-            neetoree_string_append_c_str(out, "            NEETOREE_PARSER_ACTION(");
+            neetoree_string_append_c_str(out, "            NEETOREE_PARSER_NODE_ACTION(");
             neetoree_string_append_str(out, node->spec);
             neetoree_string_append_c_str(out, "),\n");
         }
@@ -134,10 +135,10 @@ static NEETOREE_PTRLIST_WALKER(builder_nodes) {
             neetoree_string_append_char(out, zch);
         }
         neetoree_string_append_char(out, '"');
-        actualsiz = node->spec->len;
+        actualsiz = neetoree_parser_builder_spec_count(node->spec->data);
     } else {
         neetoree_string_append_c_str(out, "NULL");
-        actualsiz = 6;
+        actualsiz = 2;
     }
     neetoree_string_append_c_str(out, ", ");
     for (size_t i = actualsiz; i < render->speclen; i++) {
@@ -203,6 +204,77 @@ static NEETOREE_PTRLIST_WALKER(builder_rules) {
     neetoree_string_append_str(out, node->reference);
     neetoree_string_append_c_str(out, "_nodes),\n");
     return NEETOREE_STATUS_CONT;
+}
+
+typedef struct {
+    neetoree_parser_builder_context_t *builder;
+    neetoree_parser_builder_node_t    *parent;
+} neetoree_parser_builder_compact_context_t;
+
+size_t neetoree_parser_builder_spec_count(char *str) {
+    size_t len = 0;
+    char *it = str;
+    while (*it) {
+        if (*it == '\\' || *it == '"') {
+            len++;
+        }
+        len++;
+        it++;
+    }
+    return len;
+}
+
+void neetoree_parser_builder_spec_maxlen(neetoree_parser_builder_node_t *child, neetoree_parser_builder_node_t *parent) {
+    if (child->spec || child->reference) {
+        char *str = (child->spec) ? child->spec->data : child->reference->data;
+        parent->speclength = MAXLEN(neetoree_parser_builder_spec_count(str), parent->speclength);
+    } else {
+        parent->speclength = MAXLEN(4, parent->speclength);
+    }
+}
+
+static NEETOREE_PTRLIST_WALKER(builder_compact) {
+    neetoree_parser_builder_compact_context_t *compact = context;
+    neetoree_parser_builder_node_t *node = item;
+    neetoree_parser_builder_node_t *parent = compact->parent;
+    if (node->chain != NEETOREE_PARSER_NODE_TYPE_NONE) {
+        neetoree_parser_builder_compact_context_t next;
+        next.builder = compact->builder;
+        next.parent = node;
+        neetoree_ptrlist_walk(node->children, NEETOREE_PTRLIST_WALKER_NAME(builder_compact), &next);
+        if (node->chain == NEETOREE_PARSER_NODE_TYPE_SEQUENCE && parent->chain == NEETOREE_PARSER_NODE_TYPE_SEQUENCE) {
+            for (size_t i = 0; i < parent->children->length; i++) {
+                neetoree_parser_builder_node_t *cand = neetoree_ptrlist_access(parent->children, i);
+                if (cand == node) {
+                    size_t off = 0;
+                    neetoree_ptrlist_remove(parent->children, i);
+                    while (node->children->length > 0) {
+                        neetoree_parser_builder_node_t *child = neetoree_ptrlist_remove(node->children, 0);
+                        neetoree_parser_builder_spec_maxlen(child, parent);
+                        neetoree_ptrlist_insert(parent->children, i + off, child);
+                        off++;
+                    }
+                    break;
+                }
+            }
+            for (size_t i = 0; i < compact->builder->groups->length; i++) {
+                neetoree_parser_builder_node_t *cand = neetoree_ptrlist_access(compact->builder->groups, i);
+                if (cand == node) {
+                    neetoree_ptrlist_remove(compact->builder->groups, i);
+                    break;
+                }
+            }
+            NEETOREE_FREE_NAME(builder_node)(node);
+        }
+    }
+    return NEETOREE_STATUS_CONT;
+}
+
+void neetoree_parser_builder_compact(neetoree_parser_builder_node_t *rule, neetoree_parser_builder_context_t *ctx) {
+    neetoree_parser_builder_compact_context_t context;
+    context.builder = ctx;
+    context.parent = rule;
+    neetoree_ptrlist_walk(rule->children, NEETOREE_PTRLIST_WALKER_NAME(builder_compact), &context);
 }
 
 neetoree_string_t *neetoree_parser_builder_render(char *name, char *include, neetoree_parser_builder_context_t *ctx) {

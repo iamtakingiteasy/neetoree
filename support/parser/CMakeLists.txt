@@ -18,6 +18,10 @@ add_executable(neetoree_parser ${NEETOREE_PARSER_SOURCES})
 target_link_libraries(neetoree_parser neetoree_util)
 
 if (${DEBUG})
-    add_definitions(-DDEBUG)
+    add_definitions(-DDEBUG_TOKEN)
+    add_definitions(-DDEBUG_LEX)
 endif(${DEBUG})
+
+
+add_definitions(-DDEBUG_TOKEN)
 #add_definitions(-DDEBUG)

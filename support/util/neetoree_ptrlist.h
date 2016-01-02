@@ -28,11 +28,14 @@ typedef NeetoreeStatus (*neetoree_ptrlist_walker)(NEETOREE_PTRLIST_WALKER_ARGS);
     NeetoreeStatus NEETOREE_PTRLIST_WALKER_NAME(name)(NEETOREE_PTRLIST_WALKER_ARGS)
 
 #define neetoree_ptrlist_access(list, idx) ((list)->ptrs[(idx)])
+#define neetoree_ptrlist_set(list, idx, value) ((list)->ptrs[(idx)] = (value))
 #define neetoree_ptrlist_free NEETOREE_FREE_NAME(ptrlist)
 NEETOREE_FREE(ptrlist);
 neetoree_ptrlist_t *neetoree_ptrlist_new(neetoree_freefunc freefunc);
+void neetoree_ptrlist_insert(neetoree_ptrlist_t *list, size_t idx, void *item);
 void neetoree_ptrlist_add(neetoree_ptrlist_t *list, void *item);
-void neetoree_ptrlist_remove(neetoree_ptrlist_t *list, size_t i);
+void *neetoree_ptrlist_remove_fast(neetoree_ptrlist_t *list, size_t idx);
+void *neetoree_ptrlist_remove(neetoree_ptrlist_t *list, size_t idx);
 NeetoreeStatus neetoree_ptrlist_walk(neetoree_ptrlist_t *list, neetoree_ptrlist_walker walker, void *context);
 
 #endif //NEETOREE_NEETOREE_PTRLIST_H

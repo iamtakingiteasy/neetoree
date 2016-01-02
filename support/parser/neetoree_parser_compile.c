@@ -3,7 +3,7 @@
 //
 
 #include <stdlib.h>
-#ifdef DEBUG
+#ifdef DEBUG_TOKEN
 #include <ctype.h>
 #include <string.h>
 #endif
@@ -150,7 +150,7 @@ neetoree_parser_grammar_t *neetoree_parser_new() {
     return grammar;
 }
 
-#ifdef DEBUG
+#ifdef DEBUG_TOKEN
 static char *escapepass(char *inp) {
     char *p = inp;
     int hex = 0;
@@ -185,7 +185,7 @@ static char *escapepass(char *inp) {
 #endif
 
 NeetoreeResult neetoree_parser_applywrap(neetoree_parser_compiled_node_t *node, neetoree_parser_applyctx_t *parent) {
-#ifdef DEBUG
+#ifdef DEBUG_TOKEN
     static char *types[] = {
             "NONE",
             "RULE",
@@ -197,6 +197,7 @@ NeetoreeResult neetoree_parser_applywrap(neetoree_parser_compiled_node_t *node, 
             "REF",
             "PRED",
             "ACTION",
+            "ACTIONREF",
             "BEGIN",
             "END"
     };
@@ -244,7 +245,7 @@ NeetoreeResult neetoree_parser_applywrap(neetoree_parser_compiled_node_t *node, 
 
     size_t prev = applyctx.stream->total;
     NeetoreeResult result = node->iface->applyfunc(node->data, &applyctx);
-#ifdef DEBUG
+#ifdef DEBUG_TOKEN
     val = (char) ((parent->stream->offset > 0 ) ? *(parent->stream->current->data + parent->stream->offset - 1) : '\0');
     snprintf(zch, 5, (isprint(val)) ? "'%c'  " : "0x%02x", val);
 

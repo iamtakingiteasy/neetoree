@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    printf("\n---\n%s\n", parser->data);
+    printf("%s\n", parser->data);
     neetoree_string_free(parser);
     neetoree_stream_free(stream);
 

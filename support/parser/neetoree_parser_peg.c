@@ -22,21 +22,25 @@ static NeetoreeResult neetoree_parser_peg_impl(void *context, void *init, neetor
             NEETOREE_PARSER_NODE(REF, ONE, NONE, "LeftArrow",  NULL),
             NEETOREE_PARSER_NODE_ACTION(set_spec),
             NEETOREE_PARSER_NODE(REF, ONE, NONE, "Expression", NULL),
-            NEETOREE_PARSER_NODE_ACTION(terminate_choice),
             NEETOREE_PARSER_NODE_ACTION(rule_commit),
             NEETOREE_PARSER_NODE_TERM
     };
 
     neetoree_parser_node_t expression_variant_rule_nodes[] = {
             NEETOREE_PARSER_NODE(REF, ONE, NONE, "Slash",    NULL),
+            NEETOREE_PARSER_NODE_ACTION(node_new),
+            NEETOREE_PARSER_NODE_ACTION(group),
             NEETOREE_PARSER_NODE_ACTION(set_choice),
-            NEETOREE_PARSER_NODE_ACTION(terminate_choice),
             NEETOREE_PARSER_NODE(REF, ONE, NONE, "Sequence", NULL),
+            NEETOREE_PARSER_NODE_ACTION(node_commit),
             NEETOREE_PARSER_NODE_TERM
     };
 
     neetoree_parser_node_t expression_rule_nodes[] = {
+            NEETOREE_PARSER_NODE_ACTION(node_new),
+            NEETOREE_PARSER_NODE_ACTION(group),
             NEETOREE_PARSER_NODE(REF,      ONE,        NONE, "Sequence", NULL),
+            NEETOREE_PARSER_NODE_ACTION(node_commit),
             NEETOREE_PARSER_NODE(SEQUENCE, ZEROORMORE, NONE, NULL,       expression_variant_rule_nodes),
             NEETOREE_PARSER_NODE_TERM
     };
@@ -131,10 +135,9 @@ static NeetoreeResult neetoree_parser_peg_impl(void *context, void *init, neetor
 
     neetoree_parser_node_t primary_group_rule_nodes[] = {
             NEETOREE_PARSER_NODE(REF, ONE, NONE, "Open",       NULL),
-            NEETOREE_PARSER_NODE_ACTION(group_start),
+            NEETOREE_PARSER_NODE_ACTION(group),
             NEETOREE_PARSER_NODE(REF, ONE, NONE, "Expression", NULL),
-            NEETOREE_PARSER_NODE_ACTION(terminate_choice),
-            NEETOREE_PARSER_NODE_ACTION(group_end),
+//            NEETOREE_PARSER_NODE_ACTION(terminate_choice),
             NEETOREE_PARSER_NODE(REF, ONE, NONE, "Close",      NULL),
             NEETOREE_PARSER_NODE_TERM
     };
@@ -278,19 +281,19 @@ static NeetoreeResult neetoree_parser_peg_impl(void *context, void *init, neetor
     };
 
     neetoree_parser_node_t char_esc_rule_nodes[] = {
-            NEETOREE_PARSER_NODE(LITERAL, ONE, NONE, "\\",              NULL),
+            NEETOREE_PARSER_NODE(LITERAL, ONE, NONE, "\\\\",              NULL),
             NEETOREE_PARSER_NODE(RANGE,   ONE, NONE, "abefnrtv'\"\\[\\]\\\\", NULL),
             NEETOREE_PARSER_NODE_TERM
     };
 
     neetoree_parser_node_t char_hyph_rule_nodes[] = {
-            NEETOREE_PARSER_NODE(LITERAL, ONE, NONE, "\\",  NULL),
+            NEETOREE_PARSER_NODE(LITERAL, ONE, NONE, "\\\\",  NULL),
             NEETOREE_PARSER_NODE(LITERAL, ONE, NONE, "-",  NULL),
             NEETOREE_PARSER_NODE_TERM
     };
 
     neetoree_parser_node_t char_any_rule_nodes[] = {
-            NEETOREE_PARSER_NODE(LITERAL, ONE, NEGATIVE, "\\",  NULL),
+            NEETOREE_PARSER_NODE(LITERAL, ONE, NEGATIVE, "\\\\",  NULL),
             NEETOREE_PARSER_NODE(DOT,     ONE, NONE,     NULL,  NULL),
             NEETOREE_PARSER_NODE_TERM
     };
