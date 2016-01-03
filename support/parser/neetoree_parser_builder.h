@@ -47,7 +47,7 @@ neetoree_parser_builder_node_t *neetoree_parser_builder_node_new(NeetoreeParserB
 neetoree_string_t *neetoree_parser_builder_name(neetoree_parser_builder_node_t *parent, size_t ord);
 neetoree_string_t *neetoree_parser_builder_render(char *name, char *include, neetoree_parser_builder_context_t *ctx);
 void neetoree_parser_builder_spec_maxlen(neetoree_parser_builder_node_t *child, neetoree_parser_builder_node_t *parent);
-size_t neetoree_parser_builder_spec_count(char *str);
+size_t neetoree_parser_builder_spec_count(char *str, NeetoreeParserNodeType type);
 void neetoree_parser_builder_compact(neetoree_parser_builder_node_t *rule, neetoree_parser_builder_context_t *ctx);
 
 #endif //NEETOREE_NEETOREE_PARSER_BUILDER_H

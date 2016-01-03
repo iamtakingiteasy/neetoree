@@ -122,7 +122,7 @@ static NEETOREE_PTRLIST_WALKER(builder_nodes) {
             neetoree_string_append_char(out, zch);
         }
         neetoree_string_append_char(out, '"');
-        actualsiz = neetoree_parser_builder_spec_count(node->spec->data);
+        actualsiz = neetoree_parser_builder_spec_count(node->spec->data, node->type);
     } else {
         neetoree_string_append_c_str(out, "NULL");
         actualsiz = 2;
@@ -199,11 +199,13 @@ typedef struct {
     size_t                             ord;
 } neetoree_parser_builder_compact_context_t;
 
-size_t neetoree_parser_builder_spec_count(char *str) {
+size_t neetoree_parser_builder_spec_count(char *str, NeetoreeParserNodeType type) {
     size_t len = 0;
     char *it = str;
     while (*it) {
-        if (*it == '\\' || *it == '"') {
+        if (type == NEETOREE_PARSER_NODE_TYPE_RANGE && *it == '\\') {
+            len++;
+        } else if (*it == '"') {
             len++;
         }
         len++;
@@ -215,7 +217,7 @@ size_t neetoree_parser_builder_spec_count(char *str) {
 void neetoree_parser_builder_spec_maxlen(neetoree_parser_builder_node_t *child, neetoree_parser_builder_node_t *parent) {
     if (child->spec || child->reference) {
         char *str = (child->spec) ? child->spec->data : child->reference->data;
-        parent->speclength = MAXLEN(neetoree_parser_builder_spec_count(str), parent->speclength);
+        parent->speclength = MAXLEN(neetoree_parser_builder_spec_count(str, child->type), parent->speclength);
     } else {
         parent->speclength = MAXLEN(4, parent->speclength);
     }

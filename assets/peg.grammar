@@ -1,43 +1,42 @@
            Grammar         <- Spacing Definition+ EndOfFile
-           Definition      <- {rule_new} Identifier LEFTARROW {set_spec} Expression {rule_commit}
-           Expression      <- {node_new} {group} Sequence {node_commit} ( SLASH {node_new} {group} {set_choice} Sequence {node_commit})*
+           Definition      <- {rule_new} Identifier LeftArrow {set_spec} Expression {rule_commit}
+           Expression      <- {node_new} {group} Sequence {node_commit} ( Slash {node_new} {group} {set_choice} Sequence {node_commit} )*
            Sequence        <- Prefix*
-           Prefix          <- {node_new} (AND Action {type_action} / ( AND {pred_and} / NOT {pred_not} )? Suffix) {node_commit}
-           Suffix          <- Primary ( QUERY {cardinality_query} / STAR {cardinality_star} / PLUS {cardinality_plus} )?
-           Primary         <- Identifier !LEFTARROW {type_ref} {set_spec}
-                            / OPEN {group} Expression CLOSE
-                            / Literal {type_literal}
-                            / Class {type_class}
-                            / DOT {type_dot}
-                            / Action {type_action}
-                            / BEGIN {type_begin}
-                            / END {type_end}
-
+           Prefix          <- {node_new} ( And Action {type_action} / ( And {pred_and} / Not {pred_not} )? Suffix) {node_commit}
+           Suffix          <- Primary ( Query {cardinality_query} / Star {cardinality_star} / Plus {cardinality_plus} )?
+           Primary         <- Identifier !LeftArrow {type_ref} {set_spec}
+                            / Open {group} Expression Close
+                            / Literal
+                            / Class
+                            / Dot     {type_dot}
+                            / Action  {type_action}
+                            / Begin   {type_begin}
+                            / End     {type_end}
            Identifier      <- < IdentStart IdentCont* > Spacing
            IdentStart      <- [a-zA-Z_]
            IdentCont       <- IdentStart / [0-9]
-           Literal         <- ['] < ( !['] Char  )* > ['] {set_spec} Spacing
-                            / ["] < ( !["] Char  )* > ["] {set_spec} Spacing
-           Class           <- '[' < ( !']' Range )* > ']' {set_spec} Spacing
+           Literal         <- ['] < ( !['] Char  )* > ['] {type_literal} {set_spec} Spacing
+                            / ["] < ( !["] Char  )* > ["] {type_literal} {set_spec} Spacing
+           Class           <- '[' < ( !']' Range )* > ']' {type_class}   {set_spec} Spacing
            Range           <- Char '-' Char / Char
            Char            <- '\\' [abefnrtv'"\[\]\\]
                             / '\\' '-'
                             / !'\\' .
-           LEFTARROW       <- '<-' Spacing
-           SLASH           <- '/' Spacing
-           AND             <- '&' Spacing
-           NOT             <- '!' Spacing
-           QUERY           <- '?' Spacing
-           STAR            <- '*' Spacing
-           PLUS            <- '+' Spacing
-           OPEN            <- '(' Spacing
-           CLOSE           <- ')' Spacing
-           DOT             <- '.' Spacing
+           LeftArrow       <- '<-' Spacing
+           Slash           <- '/'  Spacing
+           And             <- '&'  Spacing
+           Not             <- '!'  Spacing
+           Query           <- '?'  Spacing
+           Star            <- '*'  Spacing
+           Plus            <- '+'  Spacing
+           Open            <- '('  Spacing
+           Close           <- ')'  Spacing
+           Dot             <- '.'  Spacing
            Spacing         <- ( Space / Comment )*
            Comment         <- '#' ( !EndOfLine . )* EndOfLine
            Space           <- ' ' / '\t' / EndOfLine
            EndOfLine       <- '\r\n' / '\n' / '\r'
            EndOfFile       <- !.
            Action          <- '{' < [^}]* > '}' {set_spec} Spacing
-           BEGIN           <- '<' Spacing
-           END             <- '>' Spacing
+           Begin           <- '<' Spacing
+           End             <- '>' Spacing
