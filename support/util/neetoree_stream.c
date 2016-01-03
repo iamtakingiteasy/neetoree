@@ -59,6 +59,11 @@ neetoree_stream_t *neetoree_stream_fork(neetoree_stream_t *parent) {
     fork->current = parent->current;
     fork->offset  = parent->offset;
     fork->total   = parent->total;
+    fork->merged  = 0;
+
+    if (parent->handlerctx) {
+        fork->handlerctx = parent->global->handlerclone(parent->handlerctx);
+    }
 
     parent->global->refcount++;
 
@@ -85,6 +90,7 @@ void neetoree_stream_commit(neetoree_stream_t *fork) {
         fork->parent->init    = fork->current;
         fork->parent->current = fork->current;
         fork->parent->offset  = fork->offset;
+        fork->merged = 1;
     }
 }
 
@@ -92,6 +98,14 @@ void neetoree_stream_free(neetoree_stream_t *stream) {
     neetoree_stream_chunk_t *chunk = stream->init;
     while (chunk) {
         chunk = neetoree_stream_chunk_unref(chunk);
+    }
+
+    if (stream->handlerctx) {
+        if (stream->merged || stream->parent->handlerctx == stream->global->handlerinit) {
+            stream->global->handlermerge(stream->parent->handlerctx, stream->handlerctx);
+        } else {
+            stream->global->handlermerge(NULL, stream->handlerctx);
+        }
     }
 
     if (!stream->parent) {
@@ -187,6 +201,9 @@ size_t neetoree_stream_read(neetoree_stream_t *stream, char *data, size_t siz) {
         stream->offset += need;
     }
     stream->total += read;
+    if (stream->handlerctx) {
+        stream->global->handler(data, read, stream->handlerctx);
+    }
     return read;
 }
 
@@ -228,4 +245,22 @@ size_t neetoree_stream_pos(neetoree_stream_t *stream) {
 
 size_t neetoree_stream_advance(neetoree_stream_t *stream, size_t adv) {
     return neetoree_stream_read(stream, NULL, adv);
+}
+
+void neetoree_stream_set_handler(
+        neetoree_stream_t *stream,
+        neetoree_stream_handler handler,
+        neetoree_stream_handler_context_clone handlerclone,
+        neetoree_stream_handler_context_merge handlermerge
+) {
+    stream->global->handler = handler;
+    stream->global->handlerclone = handlerclone;
+    stream->global->handlermerge = handlermerge;
+    stream->handlerctx = handlerclone(NULL);
+    stream->global->handlerinit = stream->handlerctx;
+}
+
+void neetoree_stream_commit_handler(neetoree_stream_t *stream, void *init) {
+    stream->global->handlermerge(init, stream->handlerctx);
+    stream->handlerctx = NULL;
 }

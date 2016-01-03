@@ -21,7 +21,6 @@ int main(int argc, char **argv) {
 
     if (parser == NULL) {
         neetoree_stream_free(stream);
-        fprintf(stderr, "Parser error\n");
         return 1;
     }
 

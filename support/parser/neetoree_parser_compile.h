@@ -87,6 +87,12 @@ typedef struct {
     NeetoreeResult     result;
 } neetoree_parser_compiled_cache_t;
 
+typedef struct {
+    size_t line;
+    size_t pos;
+    size_t total;
+} neetoree_parser_location_t;
+
 typedef struct neetoree_parser_applyctx_t {
     neetoree_parser_grammar_t         *grammar;
     neetoree_stream_t                 *stream;
@@ -96,6 +102,7 @@ typedef struct neetoree_parser_applyctx_t {
     struct neetoree_parser_applyctx_t *parent;
     neetoree_string_t                 *error;
     neetoree_string_t                 *match;
+    neetoree_ptrstack_t               *trace;
 } neetoree_parser_applyctx_t;
 
 neetoree_parser_compiled_node_t *neetoree_parser_compile_node(neetoree_parser_node_t *origin, neetoree_ptrlist_t *container, neetoree_parser_grammar_t *grammar);

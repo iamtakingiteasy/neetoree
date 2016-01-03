@@ -227,9 +227,6 @@ static NEETOREE_PARSER_ACTION_HANDLER(rule_commit) {
     neetoree_parser_builder_compact(rule, ctx);
 }
 
-
-
-
 neetoree_string_t *neetoree_parser_peg(char *name, char *include, neetoree_stream_t *stream) {
     neetoree_parser_builder_context_t *ctx = neetoree_parser_builder_new();
     NeetoreeResult result = neetoree_parser_peg_impl(ctx, ctx->rules, stream);

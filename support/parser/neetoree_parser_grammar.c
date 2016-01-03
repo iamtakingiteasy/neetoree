@@ -268,7 +268,7 @@ static NeetoreeResult neetoree_parser_peg_impl(void *context, void *init, neetor
     };
 
     neetoree_parser_node_t rule_Char_1_nodes[] = {
-            NEETOREE_PARSER_NODE(LITERAL,   ONE,        NONE,     "\\",                NULL),
+            NEETOREE_PARSER_NODE(LITERAL,   ONE,        NONE,     "\\",                    NULL),
             NEETOREE_PARSER_NODE(RANGE,     ONE,        NONE,     "abefnrtv'\"\\[\\]\\\\", NULL),
             NEETOREE_PARSER_NODE_TERM
     };

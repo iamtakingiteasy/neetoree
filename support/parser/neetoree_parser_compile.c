@@ -3,9 +3,9 @@
 //
 
 #include <stdlib.h>
+#include <string.h>
 #ifdef DEBUG_TOKEN
 #include <ctype.h>
-#include <string.h>
 #endif
 #include <neetoree_ptrlist.h>
 #include <neetoree_string.h>
@@ -241,6 +241,7 @@ NeetoreeResult neetoree_parser_applywrap(neetoree_parser_compiled_node_t *node, 
     applyctx.type = node->type;
     applyctx.parent = parent;
     applyctx.status = NEETOREE_STATUS_CONT;
+    applyctx.trace = parent->trace;
 
     size_t prev = applyctx.stream->total;
     NeetoreeResult result = node->iface->applyfunc(node->data, &applyctx);
@@ -349,6 +350,51 @@ NeetoreeResult neetoree_parser_applywrap(neetoree_parser_compiled_node_t *node, 
     return result;
 }
 
+static NEETOREE_PTRSTACK_WALKER(trace) {
+    neetoree_string_t *str = item;
+    neetoree_string_t *top = context;
+    if (top != str) {
+        printf(" <- ");
+    }
+    printf("%s\n", str->data);
+    return NEETOREE_STATUS_CONT;
+}
+
+static NEETOREE_STREAM_HANDLER(trace) {
+    neetoree_parser_location_t *location = context;
+    for (size_t i = 0; i < len; i++) {
+        char ch = data[i];
+        if (ch == '\n') {
+            location->line++;
+            location->pos = 0;
+        }
+        location->pos++;
+        location->total++;
+    }
+}
+
+static NEETOREE_STREAM_HANDLER_CONTEXT_CLONE(trace) {
+    neetoree_parser_location_t *loc = calloc(1, sizeof (neetoree_parser_location_t));
+    neetoree_parser_location_t *p = parent;
+    if (p) {
+        loc->line = p->line;
+        loc->pos = p->pos;
+        loc->total = p->total;
+    }
+    return loc;
+}
+
+static NEETOREE_STREAM_HANDLER_CONTEXT_MERGE(trace) {
+    neetoree_parser_location_t *loc = a;
+    neetoree_parser_location_t *p   = b;
+    if (loc) {
+        loc->line = p->line;
+        loc->pos = p->pos;
+        loc->total = p->total;
+    }
+    free(p);
+}
+
 NeetoreeResult neetoree_parser_run(neetoree_parser_grammar_t *grammar, neetoree_stream_t *stream, void *context) {
     if (!grammar->entry) {
         return NEETOREE_RESULT_FAILURE;
@@ -358,11 +404,57 @@ NeetoreeResult neetoree_parser_run(neetoree_parser_grammar_t *grammar, neetoree_
 
     neetoree_parser_applyctx_t applyctx;
     applyctx.grammar = grammar;
-    applyctx.stream = stream;
+    applyctx.stream = neetoree_stream_fork(stream);
     applyctx.type = grammar->entry->type;
     applyctx.parent = NULL;
     applyctx.status = NEETOREE_STATUS_CONT;
+    applyctx.trace = neetoree_ptrstack_new(NEETOREE_FREE_NAME(string));
 
+    neetoree_stream_set_handler(applyctx.stream,
+                                NEETOREE_STREAM_HANDLER_NAME(trace),
+                                NEETOREE_STREAM_HANDLER_CONTEXT_CLONE_NAME(trace),
+                                NEETOREE_STREAM_HANDLER_CONTEXT_MERGE_NAME(trace)
+    );
+
+    neetoree_parser_location_t location;
+    memset(&location, 0, sizeof(neetoree_parser_location_t));
     NeetoreeResult result = neetoree_parser_applywrap(grammar->entry, &applyctx);
+    if (result != NEETOREE_RESULT_SUCCESS) {
+        neetoree_stream_commit_handler(applyctx.stream, &location);
+        printf("Error at (%ld:%ld ~ %ld) from ",
+               location.line + 1, location.pos + 1,
+               location.total
+        );
+
+        neetoree_string_t *top = neetoree_ptrstack_peek(applyctx.trace, 0);
+        neetoree_ptrstack_walk(applyctx.trace, NEETOREE_PTRSTACK_WALKER_NAME(trace), top);
+        printf("\n");
+
+        static size_t span = 20;
+        static size_t totalspan = 20 * 2 + 2;
+        char buf[totalspan];
+        memset(buf, 0, totalspan);
+        size_t start = 0;
+        size_t offset = span;
+        if (location.pos > span) {
+            start = location.pos - span;
+        } else {
+            offset = location.pos;
+        }
+
+        neetoree_stream_advance(stream, start);
+        neetoree_stream_read(stream, buf, totalspan - 1);
+        fprintf(stderr, "\"%s\"\n", buf);
+        fprintf(stderr, " ");
+        for (size_t i = 0; i < offset; i++) {
+            fprintf(stderr, " ");
+        }
+        fprintf(stderr, "^");
+        fprintf(stderr, "\n");
+    }
+
+    neetoree_stream_commit(applyctx.stream);
+    neetoree_stream_free(applyctx.stream);
+    neetoree_ptrstack_free(applyctx.trace);
     return result;
 }
