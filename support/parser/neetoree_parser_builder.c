@@ -334,8 +334,9 @@ neetoree_string_t *neetoree_parser_builder_render(char *name, char *include, nee
     neetoree_string_append_c_str(render.out, name);
     neetoree_string_append_c_str(render.out, "(void *context, void *init, neetoree_stream_t *stream);\n\n");
     if (include) {
+        neetoree_string_append_c_str(render.out, "#include \"");
         neetoree_string_append_c_str(render.out, include);
-        neetoree_string_append_c_str(render.out, "\n");
+        neetoree_string_append_c_str(render.out, "\"\n");
     }
     //neetoree_string_append_c_str(render.out, "\n");
     //neetoree_ptrlist_walk(ctx->actions, NEETOREE_PTRLIST_WALKER_NAME(builder_actions), &render);

@@ -7,18 +7,21 @@
 #include <string.h>
 #include <neetoree_string.h>
 
+// sample invocation: ARGV[0] ../assets/peg.grammar neetoree_parser_peg_impl neetoree_parser_actions.inc
 int main(int argc, char **argv) {
-    if (argc == 1) {
-        return 0;
+    if (argc < 4) {
+        fprintf(stderr, "Error, not enough arguments\n");
+        return 2;
     }
+
     FILE *f = fopen(argv[1], "r");
-    neetoree_stream_t *stream = neetoree_stream_file_new(f, 8);
-    neetoree_string_t *parser = neetoree_parser_peg("neetoree_parser_peg_impl", "#include \"neetoree_parser_actions.inc\"", stream);
+    neetoree_stream_t *stream = neetoree_stream_file_new(f, 256);
+    neetoree_string_t *parser = neetoree_parser_peg(argv[2], argv[3], stream);
     fclose(f);
 
     if (parser == NULL) {
-        printf("\n---\nERROR\n");
         neetoree_stream_free(stream);
+        fprintf(stderr, "Parser error\n");
         return 1;
     }
 
